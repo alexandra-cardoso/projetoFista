@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: mariadb:3306
--- Tempo de geração: 02-Fev-2026 às 14:59
+-- Tempo de geração: 02-Fev-2026 às 19:17
 -- Versão do servidor: 12.0.2-MariaDB-ubu2404
 -- versão do PHP: 8.3.27
 
@@ -87,26 +87,28 @@ INSERT INTO `Disciplina` (`DisciplinaID`, `Nome`, `Ano`, `Semestre`, `ECTS`, `Cu
 -- --------------------------------------------------------
 
 --
--- Estrutura da tabela `Equivalência`
+-- Estrutura da tabela `Equivalencia`
 --
 
 CREATE TABLE `Equivalencia` (
   `EquivalenciaID` int(11) NOT NULL,
   `Disciplina_Origem` varchar(15) NOT NULL,
   `Disciplina_Destino` varchar(15) NOT NULL,
-  `Ano_Aprovacao` year(4) NOT NULL
+  `Ano_Aprovacao` year(4) NOT NULL,
+  `Faculdade_Origem` varchar(15) NOT NULL,
+  `Faculdade_Destino` varchar(15) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 
 --
--- Extraindo dados da tabela `Equivalência`
+-- Extraindo dados da tabela `Equivalencia`
 --
 
-INSERT INTO `Equivalencia` (`EquivalenciaID`, `Disciplina_Origem`, `Disciplina_Destino`, `Ano_Aprovacao`) VALUES
-(1, '03727', '1', '2026'),
-(2, '03708', 'AE7PS', '2026'),
-(3, '03712', 'AE1PM', '2026'),
-(5, 'L5096', 'AE30S', '2026'),
-(6, '03712', 'AE9SI', '2026');
+INSERT INTO `Equivalencia` (`EquivalenciaID`, `Disciplina_Origem`, `Disciplina_Destino`, `Ano_Aprovacao`, `Faculdade_Origem`, `Faculdade_Destino`) VALUES
+(1, '03727', '1', '2026', 'A WELS01', 'P LISBOA07'),
+(2, '03708', 'AE7PS', '2026', 'A WELS01', 'P LISBOA07'),
+(3, '03712', 'AE1PM', '2026', 'A WELS01', 'P LISBOA07'),
+(5, 'L5096', 'AE30S', '2026', 'A WELS01', 'P LISBOA07'),
+(6, '03712', 'AE9SI', '2026', 'A WELS01', 'P LISBOA07');
 
 -- --------------------------------------------------------
 
@@ -155,12 +157,14 @@ ALTER TABLE `Disciplina`
   ADD KEY `fk_curso` (`CursoID`);
 
 --
--- Índices para tabela `Equivalência`
+-- Índices para tabela `Equivalencia`
 --
 ALTER TABLE `Equivalencia`
   ADD PRIMARY KEY (`EquivalenciaID`),
   ADD KEY `fk_disc_origem` (`Disciplina_Origem`),
-  ADD KEY `fk_disc_destino` (`Disciplina_Destino`);
+  ADD KEY `fk_disc_destino` (`Disciplina_Destino`),
+  ADD KEY `fk_facul_origem` (`Faculdade_Origem`),
+  ADD KEY `fk_facul_destino` (`Faculdade_Destino`);
 
 --
 -- Índices para tabela `Faculdade`
@@ -179,7 +183,7 @@ ALTER TABLE `Curso`
   MODIFY `CursoID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
--- AUTO_INCREMENT de tabela `Equivalência`
+-- AUTO_INCREMENT de tabela `Equivalencia`
 --
 ALTER TABLE `Equivalencia`
   MODIFY `EquivalenciaID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
@@ -201,11 +205,13 @@ ALTER TABLE `Disciplina`
   ADD CONSTRAINT `fk_curso` FOREIGN KEY (`CursoID`) REFERENCES `Curso` (`CursoID`);
 
 --
--- Limitadores para a tabela `Equivalência`
+-- Limitadores para a tabela `Equivalencia`
 --
 ALTER TABLE `Equivalencia`
   ADD CONSTRAINT `fk_disc_destino` FOREIGN KEY (`Disciplina_Destino`) REFERENCES `Disciplina` (`DisciplinaID`) ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_disc_origem` FOREIGN KEY (`Disciplina_Origem`) REFERENCES `Disciplina` (`DisciplinaID`) ON UPDATE CASCADE;
+  ADD CONSTRAINT `fk_disc_origem` FOREIGN KEY (`Disciplina_Origem`) REFERENCES `Disciplina` (`DisciplinaID`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_facul_destino` FOREIGN KEY (`Faculdade_Destino`) REFERENCES `Faculdade` (`CodFaculdade`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_facul_origem` FOREIGN KEY (`Faculdade_Origem`) REFERENCES `Faculdade` (`CodFaculdade`) ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
