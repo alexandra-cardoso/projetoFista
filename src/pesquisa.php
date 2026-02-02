@@ -6,7 +6,7 @@ if(isset($_POST['pesquisa'])) {
     $ano = trim($_POST['ano']);
     $semestre = trim($_POST['semestre']);
 } else {
-    header("Location: menu.html");
+    header("Location: index.html");
     exit();
 }
 
