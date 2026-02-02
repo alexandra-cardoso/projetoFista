@@ -1,0 +1,36 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 9000:80
+    develop:
+      watch:
+        - action: sync
+          path: ./src
+          target: /var/www/html
+
+  mariadb:
+    image: mariadb
+    environment:
+      MARIADB_ROOT_PASSWORD: maria
+    ports:
+      - "6033:3306"
+    volumes:
+      - dbdata:/var/lib/mariadb
+  
+  phpmyadmin:
+    image: phpmyadmin
+    links:
+      - mariadb
+    environment:
+      PMA_HOST: mariadb
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    restart: always
+    ports:
+      - 8081:80
+
+volumes:
+  dbdata:
