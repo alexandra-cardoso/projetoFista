@@ -77,7 +77,7 @@ class Pesquisa extends BDErasmus {
         $textoLimpo = strip_tags($html);
         $textoLimitado = substr($textoLimpo, 0, 10000); 
 
-        $apiKey = 'AIzaSyBtdKjLNQHMYIGDFCZehzeIO_4DsJWKTMQ';
+        $apiKey = 'AIzaSyBtdKjLNQHMYIGDFCZehzeIO_4DsJWKTMQ'; //CHAVE DO GEMINI DA XANA
         $apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" . $apiKey;
 
         $dados_post = [
