@@ -19,11 +19,11 @@ if(isset($_POST['pesquisa'])) {
         <link rel="stylesheet" href="style.css">
     </head>
     <body>
-        <h1> Equivalências para <?php echo $destino " / " $ano " ano, " $semestre " semestre"?></h1>
+        <h1> Equivalências para <?php echo $destino, " / ", $ano, " ano, ", $semestre, " semestre"?></h1>
         <?php require('bdERASMUS.php');
         $pesquisa = new Pesquisa;
         $pesquisa->Pesquisa();
-        $pesquisa->mostrarResultados();
+        $pesquisa->obterDados($origem, $destino);
         $pesquisa->fecharBDErasmus(); ?>
     </body>
 </html>
