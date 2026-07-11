@@ -97,14 +97,20 @@ class Pesquisa extends BDErasmus {
     
     function procurarNoSQL($origem, $destino) {
         $ano_atual = date("Y");
-		$sql = "SELECT e.*, f1.Nome, f2.Nome 
-		FROM Equivalencia e
-        INNER JOIN Faculdade f1 ON e.Faculdade_Origem = f1.CodFaculdade
-        INNER JOIN Faculdade f2 ON e.Faculdade_Destino = f2.CodFaculdade
-		WHERE f1.Nome = ? AND f2.Nome = ? AND e.Ano_Aprovacao <= ?";
+		$sql = "SELECT e.*, f1.Nome, f2.Nome,
+                d1.Nome, d1.Ano, d1.Semestre,
+                d2.Nome, d2.Ano, d2.Semestre
+            FROM Equivalencia e
+            INNER JOIN Faculdade f1 ON e.Faculdade_Origem = f1.CodFaculdade
+            INNER JOIN Faculdade f2 ON e.Faculdade_Destino = f2.CodFaculdade
+            LEFT JOIN Disciplina d1 ON e.Disciplina_Origem = d1.DisciplinaID
+            LEFT JOIN Disciplina d2 ON e.Disciplina_Destino = d2.DisciplinaID
+            WHERE f1.Nome = ? AND f2.Nome = ? AND e.Ano_Aprovacao <= ?";
         $stmt = $this->db_erasmus->conn->prepare($sql);
         $stmt->bind_param("ssi", $origem, $destino, $ano_atual);
-        $stmt->execute();$result_set = $stmt->get_result();
+        $stmt->execute();
+        $result_set = $stmt->get_result();
+        
         $lista_results = [];
         if($result_set && $result_set->num_rows > 0) {
             while($row = $result_set->fetch_assoc()) {

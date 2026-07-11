@@ -17,6 +17,40 @@ h1 {
     -webkit-text-stroke-width: 1px;
     -webkit-text-stroke-color: #1E1E1E;
 }
+.top-menu {
+    width: 100%;
+    padding: 20px 50px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    box-sizing: border-box;
+}
+.logo-texto {
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+    font-family: 'Segoe UI', sans-serif;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+.links a {
+    color: white;
+    text-decoration: none;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 18px;
+    margin-left: 30px;
+    padding-bottom: 5px;
+    transition: 0.3s;
+}
+.links a:hover {
+    color: #FFD700;
+}
+.links a.ativo {
+    border-bottom: 2px soilid #FFD700;
+    font-weight: bold;
+}
 main {
     background-color: #2D548B;
     border-radius: 18px;

@@ -16,10 +16,13 @@ $cursos = $sistema->obterCursos();
     </head>
 
     <body>
-        <header>
-            <h1>Erasmus Buddie</h1>
-            <p>Decide o teu destino com apenas alguns cliques!</p>
-        </header>
+        <nav class="top-menu">
+            <div class ="logo-texto">Erasmus Buddie</div>
+            <div class="links">
+                <a href="index.php" class="ativo">Pesquisar</a>
+                <a href="submeter.php">Partilhar Equivalências</a>
+            </div>
+        </nav>
         <main>
             <form method = "post" action = "pesquisa.php" class="search-boxes">
                 <div class="text-and-box">
@@ -62,22 +65,9 @@ $cursos = $sistema->obterCursos();
                     <label>Ano do Curso: </label>
                     <select name="ano_curso" required class="select-box">
                         <option value =""> Selectionar... </option>
-                        <option value =""> 1º </option>
-                        <option value =""> 2º </option>
-                        <option value =""> 3º </option>
-                    </select>
-                </div>
-
-                <div class="text-and-box">
-                    <label>Ano Letivo: </label>
-                    <select name="ano_letivo" required class="select-box">
-                        <option value =""> Selectionar...</option>
-                        <?php
-                            foreach($anos as $ano) {
-                                $anoAprov = htmlspecialchars($ano['Ano_Aprovacao']);
-                                echo '<option value="'.$anoAprov.'">'.$anoAprov.'</option>';
-                            }
-                        ?>
+                        <option value ="1"> 1º </option>
+                        <option value ="2"> 2º </option>
+                        <option value ="3"> 3º </option>
                     </select>
                 </div>
 
@@ -85,8 +75,8 @@ $cursos = $sistema->obterCursos();
                     <label>Semestre do Curso: </label>
                     <select name="semestre" required class="select-box">
                         <option value =""> Selectionar... </option>
-                        <option value =""> 1º </option>
-                        <option value =""> 2º </option>
+                        <option value ="1"> 1º </option>
+                        <option value ="2"> 2º </option>
                     </select>
                 </div>
                 <button type="submit" name="pesquisa">Pesquisar</button><br>

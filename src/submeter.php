@@ -34,11 +34,13 @@ if(isset($_POST['gravar-eq'])) {
         <link rel="stylesheet" href="style.css">
     </head>
     <body>
-        <header>
-            <h1>Erasmus Buddie</h1>
-            <p>Ajuda outros alunos, partilhando a tua experiência ERASMUS!</p>
-            <a href="index.php" style="color:white; text-decoration:none;">← Voltar à Pesquisa</a>
-        </header>
+        <nav class="top-menu">
+            <div class ="logo-texto">Erasmus Buddie</div>
+            <div class="links">
+                <a href="index.php">Pesquisar</a>
+                <a href="submeter.php" class="ativo">Partilhar Equivalências</a>
+            </div>
+        </nav>
         <main style="padding:20px;">
             <div class="bloco-forms">
                 <h2>Nova Equivalência</h2>
