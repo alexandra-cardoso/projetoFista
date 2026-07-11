@@ -19,10 +19,13 @@ if(isset($_POST['pesquisa'])) {
         <link rel="stylesheet" href="style.css">
     </head>
     <body>
-        <header>
-            <h1>Erasmus Buddie</h1>
-            <p>Resultados da compatibilidade</p>
-        </header>
+        <nav class="top-menu">
+            <div class ="logo-texto">Erasmus Buddie</div>
+            <div class="links">
+                <a href="index.php">Pesquisar</a>
+                <a href="submeter.php">Partilhar Equivalências</a>
+            </div>
+        </nav>
         <main style="padding: 20px; text-align: center; color: white; width: 85%;">
             <h2> Equivalências para <?php echo htmlspecialchars($destino); ?></h2>
             <p> Ano do Curso: <?php echo htmlspecialchars($ano); ?>º | Semestre: <?php echo htmlspecialchars($semestre); ?>º</p>
