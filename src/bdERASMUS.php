@@ -94,12 +94,12 @@ class Pesquisa extends BDErasmus {
         }
         return $lista;
     }
-    
+    //vamos usar os nomes do SELECT na pesquisa.php
     function procurarNoSQL($origem, $destino) {
         $ano_atual = date("Y");
-		$sql = "SELECT e.*, f1.Nome, f2.Nome,
-                d1.Nome, d1.Ano, d1.Semestre,
-                d2.Nome, d2.Ano, d2.Semestre
+		$sql = "SELECT e.*, f1.Nome as NomeOrigem, f2.Nome as NomeDestino,
+                d1.Nome as NomeDiscOrigem, d1.Ano as AnoDiscOrigem, d1.Semestre as SemestreDiscOrigem,
+                d2.Nome as NomeDiscDestino, d2.Ano as AnoDiscDestino, d2.Semestre as SemestreDiscDestino
             FROM Equivalencia e
             INNER JOIN Faculdade f1 ON e.Faculdade_Origem = f1.CodFaculdade
             INNER JOIN Faculdade f2 ON e.Faculdade_Destino = f2.CodFaculdade
@@ -110,7 +110,7 @@ class Pesquisa extends BDErasmus {
         $stmt->bind_param("ssi", $origem, $destino, $ano_atual);
         $stmt->execute();
         $result_set = $stmt->get_result();
-        
+
         $lista_results = [];
         if($result_set && $result_set->num_rows > 0) {
             while($row = $result_set->fetch_assoc()) {

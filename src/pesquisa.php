@@ -26,9 +26,11 @@ if(isset($_POST['pesquisa'])) {
                 <a href="submeter.php">Partilhar Equivalências</a>
             </div>
         </nav>
-        <main style="padding: 20px; text-align: center; color: white; width: 85%;">
-            <h2> Equivalências para <?php echo htmlspecialchars($destino); ?></h2>
-            <p> Ano do Curso: <?php echo htmlspecialchars($ano); ?>º | Semestre: <?php echo htmlspecialchars($semestre); ?>º</p>
+        <main class="main-largo">
+            <div class="titulos">
+                <h2> Equivalências para <?php echo htmlspecialchars($destino); ?></h2>
+                <p> Ano do Curso: <?php echo htmlspecialchars($ano); ?>º | Semestre: <?php echo htmlspecialchars($semestre); ?>º</p>
+            </div>
             <br>
 
             <?php require_once('bdERASMUS.php');
@@ -39,13 +41,15 @@ if(isset($_POST['pesquisa'])) {
             $secundarios=[];
 
             if (!empty($resultados)) {
+                $ano = (int)$ano;
+                $semestre = (int)$semestre;
                 foreach ($resultados as $linha) {
                     $ano_org = $linha['AnoDiscOrigem'] ?? null;
                     $sem_org = $linha['SemestreDiscOrigem'] ?? null;
                     $ano_dest = $linha['AnoDiscDestino'] ?? null;
                     $sem_dest = $linha['SemestreDiscDestino'] ?? null;
 
-                    $ano_disc = $ano_origem ?? $ano_dest;
+                    $ano_disc = $ano_org ?? $ano_dest;
                     $sem_disc = $sem_org ?? $sem_dest;
 
                     if (($ano_org == $ano && $sem_org == $semestre) || ($ano_dest == $ano && $sem_dest == $semestre)) {
@@ -97,10 +101,10 @@ if(isset($_POST['pesquisa'])) {
             }
 
             //cadeiras noutro semestre/ano
-            if (!empty($outros)) {
+            if (!empty($secundarios)) {
                 echo "<hr style='width: 90%; border: 0; border-top: 1px solid rgba(255,255,255,0.2); margin: 20px auto;'>";
                 echo "<h3 style='color: #FFD700; text-align: left; width: 90%; margin: 20px auto 10px auto;'>Outras equivalências para se estiveres a pensar em ir noutra altura...</h3>";
-                desenharTabela($outros);
+                desenharTabela($secundarios);
             }
 
             $pesquisa->fecharBDErasmus();
