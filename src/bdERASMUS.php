@@ -131,7 +131,7 @@ class Pesquisa extends BDErasmus {
         $textoLimpo = strip_tags($html);
         $textoLimitado = substr($textoLimpo, 0, 10000); 
 
-        $apiKey = 'AIzaSyBtdKjLNQHMYIGDFCZehzeIO_4DsJWKTMQ'; //CHAVE DO GEMINI DA XANA
+        $apiKey = getenv('GEM_API_KEY');
         $apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" . $apiKey;
 
         $prompt = "Age como um extrator de dados JSON. Analisa este texto de um site universitário e extrai as disciplinas e ECTS. \n" . //para mudar ainda, quero que ele receba uma lista das disciplinas que a pessoa iria ter e faça possíveis equivalências
