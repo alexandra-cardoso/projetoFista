@@ -19,7 +19,7 @@ class BDErasmus {
 class Pesquisa extends BDErasmus {
     var $db_erasmus;
     
-    function Pesquisa() {
+    function __construct() {
         $this -> db_erasmus = new BDErasmus();
         $this->db_erasmus->ligarBD();
     }

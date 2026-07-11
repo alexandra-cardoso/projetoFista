@@ -7,9 +7,9 @@
 -- Versão do servidor: 12.0.2-MariaDB-ubu2404
 -- versão do PHP: 8.3.27
 
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET SQL_MODE = 'NO_AUTO_VALUE_ON_ZERO';
 START TRANSACTION;
-SET time_zone = "+00:00";
+SET time_zone = '+00:00';
 
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
@@ -21,6 +21,8 @@ SET time_zone = "+00:00";
 -- Base de dados: `ERASMUS`
 --
 
+CREATE DATABASE IF NOT EXISTS `ERASMUS`;
+USE `ERASMUS`;
 -- --------------------------------------------------------
 
 --

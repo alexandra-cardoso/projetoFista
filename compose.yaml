@@ -7,20 +7,19 @@ services:
       - 9000:80
     environment:
       - GEM_API_KEY=${GEM_API_KEY}
-    develop:
-      watch:
-        - action: sync
-          path: ./src
-          target: /var/www/html
+    volumes:
+      - ./src:/var/www/html
 
   mariadb:
     image: mariadb
     environment:
       MARIADB_ROOT_PASSWORD: maria
+      MARIABD_DATABASE: ERASMUS
     ports:
       - "6033:3306"
     volumes:
       - dbdata:/var/lib/mariadb
+      - ./ERASMUS.sql:/docker-entrypoint-initdb.d/init.sql
   
   phpmyadmin:
     image: phpmyadmin
