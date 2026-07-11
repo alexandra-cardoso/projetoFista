@@ -2,8 +2,8 @@
 require_once 'bdERASMUS.php';
 $sistema = new Pesquisa();
 $listaFac = $sistema->obterFaculdades();
-$anos -> $sistema->obterAnos();
-$cursos->$sistema->obterCursos();
+$anos = $sistema->obterAnos();
+$cursos = $sistema->obterCursos();
 ?>
 
 <!DOCTYPE html>
@@ -74,7 +74,8 @@ $cursos->$sistema->obterCursos();
                         <option value =""> Selectionar...</option>
                         <?php
                             foreach($anos as $ano) {
-                                echo '<option value="'.$ano['Nome'].'">'.$ano['Nome'].'</option>';
+                                $anoAprov = htmlspecialchars($ano['Ano_Aprovacao']);
+                                echo '<option value="'.$anoAprov.'">'.$anoAprov.'</option>';
                             }
                         ?>
                     </select>

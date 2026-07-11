@@ -74,3 +74,35 @@ main {
 .pixel-select:focus {
     box-shadow: 0 0 0 3px #6091E7; /* Cria uma auréola azul suave */
 }
+
+.bloco-forms {
+    max-width: 500px;
+    margin: 0 auto;
+    background: rgba(0,0,0,0.2);
+    padding: 20px;
+    border-radius: 8px;
+}
+.form-sub {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    text-align: left;
+}
+.form-sub select {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+}
+.form-sub input {
+    width: 95%;
+    padding: 8px;
+    margin-top: 5px;
+}
+.form-sub button {
+    padding: 10px;
+    cursor: pointer;
+    background-color: #4f9efe;
+    color: white;
+    border: none;
+    font-weight: bold;
+}
