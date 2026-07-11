@@ -3,11 +3,10 @@ class BDErasmus {
     var $conn;
     function ligarBD() {
         $this->conn = mysqli_connect("mariadb", "root","maria","ERASMUS");
-        if(!$this->conn) return -1;
+        if($this->conn->connect_error) die("Falha na ligação: " . $this->conn->connect_error);
     }
     function executarSQL($sql_command) {
-        $resultado = mysqli_query($this->conn, $sql_command);
-        return $resultado;
+        return $this->conn->query($sql_command);
     }
     function numeroTuplos($tabela) {
         $rs = $this->executarSQL("SELECT * FROM $tabela");
@@ -21,26 +20,30 @@ class Pesquisa extends BDErasmus {
     var $db_erasmus;
     
     function Pesquisa() {
-        $this -> db_erasmus = new BDErasmus;
+        $this -> db_erasmus = new BDErasmus();
         $this->db_erasmus->ligarBD();
     }
 
     function novaFaculdade($codEscola, $nome, $pais, $url) {
-        $sql = "INSERT INTO Faculdade (CodFaculdade, Nome, Pais, URL) VALUES ($codEscola, '$nome', $pais, '$url')";
-        $this->db_erasmus->executarSQL($sql);
+        $sql = $this->db_erasmus->conn->prepare("INSERT INTO Faculdade (CodFaculdade, Nome, Pais, URL) VALUES (?, ?, ?, ?)");
+        $sql->bind_param("ssss", $codEscola, '$nome', $pais, '$url');
+        $sql->execute();$sql->close();
     }
     
     function novaEquivalencia($disc_origem, $disc_destino, $ano) {
-        $sql = "INSERT INTO Equivalencia(id, Cadeira_Origem, Cadeira_Destino, Ano_Aprovacao) VALUES(NULL, '$disc_origem', '$disc_destino', '$ano')";
-        $this->db_erasmus->executarSQL($sql);
+        $sql =$this->db_erasmus->conn->prepare("INSERT INTO Equivalencia (Disciplina_Origem, Disciplina_Destino, Ano_Aprovacao) VALUES (?, ?, ?)");
+        $sql->bind_param("ssi", $disc_origem, $disc_destino,$ano);
+        $sql->execute();$sql->close();
     }
 
     function obterURLFaculdade($nome) {
-        $sql = "SELECT URL FROM Faculdade WHERE Nome = '$nome' LIMIT 1";
-        $rs = $this->db_erasmus->executarSQL($sql);
+        $sql =$this->db_erasmus->conn->prepare("SELECT URL FROM Faculdade WHERE Nome = ? LIMIT 1");
+        $sql->bind_param("s", $nome);
+        $sql->execute();
+        $rs =$sql->get_result();
         
-        if($rs && mysqli_num_rows($rs) > 0) {
-            $linha = mysqli_fetch_assoc($rs);
+        if($rs && $rs->num_rows > 0) {
+            $linha = $rs->fetch_assoc();
             return $linha['URL'];
         }
         return null;
@@ -64,7 +67,7 @@ class Pesquisa extends BDErasmus {
         $sql="SELECT CodFaculdade, Nome FROM Faculdade ORDER BY Nome ASC";
         $result = $this->db_erasmus->executarSQL($sql);
         if($result) {
-            while($row = mysqli_fetch_assoc($result)) {
+            while($row = $result->fetch_assoc()) {
                 $lista[] = $row;
             }
         }
@@ -75,7 +78,7 @@ class Pesquisa extends BDErasmus {
         $sql="SELECT Ano_Aprovacao FROM Equivalencia ORDER BY Ano_Aprovacao ASC";
         $result = $this->db_erasmus->executarSQL($sql);
         if($result) {
-            while($row = mysqli_fetch_assoc($result)) {
+            while($row = $result->fetch_assoc()) {
                 $lista[] = $row;
             }
         }
@@ -85,44 +88,44 @@ class Pesquisa extends BDErasmus {
         $lista = [];
         $result = $this->db_erasmus->executarSQL("SELECT Nome FROM Curso");
         if($result) {
-            while($row = mysqli_fetch_assoc($result)) {
+            while($row = $result->fetch_assoc()) {
                 $lista[] = $row;
             }
         }
+        return $lista;
     }
     
     function procurarNoSQL($origem, $destino) {
         $ano_atual = date("Y");
-		$result_set = $this->db_erasmus->executarSQL("SELECT e.*, f1.Nome, f2.Nome
+		$sql = "SELECT e.*, f1.Nome, f2.Nome 
 		FROM Equivalencia e
         INNER JOIN Faculdade f1 ON e.Faculdade_Origem = f1.CodFaculdade
         INNER JOIN Faculdade f2 ON e.Faculdade_Destino = f2.CodFaculdade
-		WHERE f1.Nome = '$origem' AND f2.Nome = '$destino' AND e.Ano_Aprovacao <= $ano_atual");
-        
+		WHERE f1.Nome = ? AND f2.Nome = ? AND e.Ano_Aprovacao <= ?";
+        $stmt = $this->db_erasmus->conn->prepare($sql);
+        $stmt->bind_param("ssi", $origem, $destino, $ano_atual);
+        $stmt->execute();$result_set = $stmt->get_result();
         $lista_results = [];
-        if($result_set && mysqli_num_rows($result_set) > 0) {
-            while($row = mysqli_fetch_assoc($result_set)) {
+        if($result_set && $result_set->num_rows > 0) {
+            while($row = $result_set->fetch_assoc()) {
                 $lista_results[] = $row;
             }
             return $lista_results;
-        } else {
-            return null;
         }
+        return null;
     }
 
     function IA($destino) {
-        $sql_url = "SELECT URL FROM Faculdade WHERE Nome = '$destino'";
-        $resultado = $this->db_erasmus->executarSQL($sql_url);
-        if($resultado) {
-            $url_site = $resultado[0]['URL'];
-            return $this->pesquisar($url_site);
+        $url = $this->obterURLFaculdade($destino);
+        if($url) {
+            return $this->pesquisar($url);
         } else {
-            return "Erro: não tenho site desta faculdade disponível";
+            return "Erro: não tenho site desta faculdade disponível.";
         }
     }
 
     function pesquisar($url) {
-        $opcoes = ["http" => ["header" => "User-Agent: Mozilla/5.0 (compatible; ErasmusBot/1.0)", "timeout"=>10 ]];
+        $opcoes = ["http" => ["header" => "User-Agent: Mozilla/5.0", "timeout"=>10 ]];
         $contexto = stream_context_create($opcoes);
         $html = @file_get_contents($url, false, $contexto);
 
@@ -135,11 +138,11 @@ class Pesquisa extends BDErasmus {
         $apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" . $apiKey;
 
         $prompt = "Age como um extrator de dados JSON. Analisa este texto de um site universitário e extrai as disciplinas e ECTS. \n" . //para mudar ainda, quero que ele receba uma lista das disciplinas que a pessoa iria ter e faça possíveis equivalências
-        "Regras obrigatórias:\n".
+        "Regras obrigatórias:\n" .
         "1. Devolve APENAS um JSON válido.\n" .
         "2. O formato deve ser: [{\"cadeira\": \"Nome\", \"ects\": \"6\"}, ...]\n" .
-            "3. Não uses Markdown, não uses ```json, apenas o texto puro.\n\n" .
-            "Texto do site:\n" . $textoLimitado;
+        "3. Não uses Markdown, não uses ```json, apenas o texto puro.\n\n" .
+        "Texto do site:\n" . $textoLimitado;
 
         $dados_post = [
             "contents" => [ [ "parts" => [ [ "text" => $prompt ]]]]
@@ -150,7 +153,6 @@ class Pesquisa extends BDErasmus {
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($dados_post));
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-
         $resposta_api = curl_exec($ch);
         
         if (curl_errno($ch)) {
@@ -165,6 +167,7 @@ class Pesquisa extends BDErasmus {
             $texto_limpo_json = str_replace(['```json', '```'], '', $texto_bruto);
             $lista_disciplinas = json_decode($texto_limpo_json, true);
         } 
+        $resultado_final = [];
         if (is_array($lista_disciplinas)) {
             foreach($lista_disciplinas as $disciplina) {
                 $nome=$disciplina['cadeira'] ?? 'Desconhecido';
