@@ -1,22 +1,3 @@
--- phpMyAdmin SQL Dump
--- version 5.2.3
--- https://www.phpmyadmin.net/
---
--- Host: mariadb:3306
--- Tempo de geração: 02-Fev-2026 às 19:17
--- Versão do servidor: 12.0.2-MariaDB-ubu2404
--- versão do PHP: 8.3.27
-
-SET SQL_MODE = 'NO_AUTO_VALUE_ON_ZERO';
-START TRANSACTION;
-SET time_zone = '+00:00';
-
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
-
 --
 -- Base de dados: `ERASMUS`
 --
@@ -141,10 +122,6 @@ INSERT INTO `Faculdade` (`CodFaculdade`, `Nome`, `Pais`, `URL`) VALUES
 ('SF VANTAA06', 'Laurea University of Applied Sciences', 'FI', NULL);
 
 --
--- Índices para tabelas despejadas
---
-
---
 -- Índices para tabela `Curso`
 --
 ALTER TABLE `Curso`
@@ -175,10 +152,6 @@ ALTER TABLE `Faculdade`
   ADD PRIMARY KEY (`CodFaculdade`);
 
 --
--- AUTO_INCREMENT de tabelas despejadas
---
-
---
 -- AUTO_INCREMENT de tabela `Curso`
 --
 ALTER TABLE `Curso`
@@ -190,9 +163,6 @@ ALTER TABLE `Curso`
 ALTER TABLE `Equivalencia`
   MODIFY `EquivalenciaID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
---
--- Restrições para despejos de tabelas
---
 
 --
 -- Limitadores para a tabela `Curso`
@@ -214,8 +184,4 @@ ALTER TABLE `Equivalencia`
   ADD CONSTRAINT `fk_disc_origem` FOREIGN KEY (`Disciplina_Origem`) REFERENCES `Disciplina` (`DisciplinaID`) ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_facul_destino` FOREIGN KEY (`Faculdade_Destino`) REFERENCES `Faculdade` (`CodFaculdade`) ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_facul_origem` FOREIGN KEY (`Faculdade_Origem`) REFERENCES `Faculdade` (`CodFaculdade`) ON UPDATE CASCADE;
-COMMIT;
 
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

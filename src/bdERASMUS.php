@@ -75,7 +75,7 @@ class Pesquisa extends BDErasmus {
     }
     function obterAnos() {
         $lista = [];
-        $sql="SELECT Ano_Aprovacao FROM Equivalencia ORDER BY Ano_Aprovacao ASC";
+        $sql="SELECT DISTINCT Ano_Aprovacao FROM Equivalencia ORDER BY Ano_Aprovacao ASC";
         $result = $this->db_erasmus->executarSQL($sql);
         if($result) {
             while($row = $result->fetch_assoc()) {
