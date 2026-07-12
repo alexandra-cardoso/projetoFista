@@ -1,8 +1,11 @@
 from ddgs import DDGS
 import requests
-from bs4 import BeautifulSoup
+from pypdf import PdfReader
+import io
 import time
 import os
+import json
+import mysql.connector #ligar a mariadb
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -16,63 +19,61 @@ class AIHunter:
         }
 
     def search_link(self, dominio):
-        query = f'site:{dominio}/en "course catalogue" OR "list of courses" erasmus'
-        try:
-            with DDGS() as ddgs:
-                results=list(ddgs.text(query, max_results=5))
+        query = f'site:{dominio} ext:pdf "course" "ects" "erasmus" "incoming" -"bilateral" -"agreement"'
+        max_tries = 3
+        for tentativa in range(max_tries):
+            try:
+                with DDGS() as ddgs:
+                    results = list(ddgs.text(query, max_results=5))
 
-            if results:
-                for result in results:
-                    link=result['href']
-                    real_dominio=link.split('/')[2]
-                    if real_dominio == dominio or real_dominio.endswith('.' + dominio):
-                        return link #retorna melhor link. do top 3 q ele encontra, escolhe o que acha mais correspondente- deve ter a informação necessária
-                return results[0]['href']
-            return None
-        except Exception as e:
-            print(f"Erro na pesquisa DuckDuckGo: {e}")
-            return None
+                if results:
+                    palavras_prob=["palermo", "bilateral", "agreement", "signed"]
+                    for result in results:
+                        link=result['href']
+                        if ".pdf" in link.lower() and not any(palavra in link.lower() for palavra in palavras_prob):
+                            return link
+                return None
+            except Exception as e:
+                print(f"Erro na pesquisa DuckDuckGo: {e}")
+                return None
         
     def read_link(self, url):
         try:
-            response = requests.get(url, headers=self.headers, timeout=15)
+            response = requests.get(url, headers=self.headers, timeout=20)
             response.raise_for_status() # vê se deu erro
 
-            soup = BeautifulSoup(response.text, 'html.parser')
+            pdf_file = io.BytesIO(response.content)
+            reader = PdfReader(pdf_file)
 
-            for a_tag in soup.find_all('a', href=True):
-                text = a_tag.get_text(strip=True).lower()
-                if "course" in text or "catalogue" in text or "subject" in text:
-                    sec_link = a_tag['href']
-                    if sec_link.startswith('/'):
-                        from urllib.parse import urljoin
-                        sec_link = urljoin(url, sec_link)
-                    print(f"robô encontrou atalho: {sec_link}")
-                    new_response = requests.get(sec_link, headers=self.headers, timeout=15)
-                    new_soup = BeautifulSoup(new_response.text, 'html.parser')
-
-                    text_final = new_soup.get_text(separator=' ', strip=True)
-                    return text_final[:15000]
-            #se n encontrar mais links
-            text = soup.get_text(separator=' ', strip=True)
-            final_text = text[:15000]
-
-            return final_text
+            final_text = ""
+            for i, page in enumerate(reader.pages[:15]):
+                page_text = page.extract_text()
+                if page_text:
+                    final_text += f"\n--- PÁGINA {i+1} ---\n" + page_text
+            
+            return final_text[:20000]
+            
         except Exception as e:
-            print(f"Erro ao tentar ler o site: {e}")
+            print(f"Erro ao tentar ler o PDF: {e}")
             return None
         
     def extract_data(self, initial_text):
         print("A enviar texto para Gemini")
         prompt = f"""
-        Tu és um assistente de extração de dados. O texto abaixo foi extraído do site de uma universidade para alunos de Erasmus.
-        A tua missão é encontrar todas as disciplinas/cadeiras disponíveis e os seus respetivos créditos ECTS.
+        Tu és um assistente especialista em Engenharia de Dados e processamento de documentos universitários. 
+        O texto abaixo foi extraído diretamente de um documento PDF oficial de Erasmus (Course Catalogue).
+        A tua missão é encontrar as disciplinas disponíveis e formatá-las num JSON rigoroso.
 
         Regras muito estritas:
-        1. Devolve APENAS um array JSON válido.
-        2. Cada objeto no array deve ter exatamente duas chaves: "disciplina" (string) e "ects" (número inteiro).
-        3. Não inclua texto antes nem depois do JSON. Não uses a formatação de markdown ```json.
-        4. Se não encontrares disciplinas, devolve um array vazio: []
+        1. Devolve APENAS um array JSON válido, sem texto antes ou depois, sem formatação ```json.
+        2. Cada objeto no array DEVE ter estas chaves exatas:
+           - "codigo": string (O código/ID da cadeira. Se não existir, cria uma sigla de 5 a 8 letras baseada no nome).
+           - "nome": string (O nome da disciplina).
+           - "ano": inteiro (O ano letivo da cadeira. Se não souberes, mete null).
+           - "semestre": inteiro (1 ou 2. Se não souberes, mete 1 por defeito).
+           - "ects": inteiro (O número de créditos).
+           - "curso": string (O nome do curso a que pertence. Se não souberes, escreve "Geral Erasmus").
+        3. Se não encontrares disciplinas claras, devolve: []
 
         Texto da Universidade:
         {initial_text}
@@ -85,39 +86,92 @@ class AIHunter:
 
         try: 
             response = requests.post(url_api, headers={'Content-Type': 'application/json'}, json=dados_post)
-            #response.raise_for_status()
+            
             if response.status_code != 200:
                 print(f"\n🚨 O GOOGLE REJEITOU O PEDIDO (Erro {response.status_code})")
-                print("A justificação oficial do Google foi:")
-                print(response.text) # Isto vai mostrar-nos se a chave é inválida ou se o modelo não existe!
                 return None
             
             dados=response.json()
 
             if 'candidates' in dados and len(dados['candidates']) > 0:
-                text = dados['candidates'][0]['content']['parts'][0]['text']
-                return text
+                return dados['candidates'][0]['content']['parts'][0]['text']
             else:
-                return "IA não devolveu candidatos validos"
+                return "[]"
         except Exception as e:
             print(f"Erro ao falar com a IA: {e}")
             return None
+        
+    def save_to_memory(self, json_string, cod_faculdade):
+        try:
+            info = json.loads(json_string)
+            if not info:
+                print("JSON vazio. Nada para gravar.")
+                return
+            
+            conn = mysql.connector.connect(
+                host=os.getenv("DB_HOST", "localhost"),
+                port=6033,
+                user=os.getenv("DB_USER", "root"),
+                password = os.getenv("DB_PASSWORD", "maria"),
+                database = os.getenv("DB_NAME", "ERASMUS")
+            )
+            cursor = conn.cursor()
+
+            contador = 0
+            for disc in info:
+                nome_curso = disc.get("curso", "Geral Erasmus")
+                cursor.execute("SELECT CursoID FROM Curso WHERE Nome =  %s AND CodFaculdade = %s", (nome_curso, cod_faculdade))
+                result_curso = cursor.fetchone()
+
+                if result_curso: #se o curso já existe
+                    curso_id = result_curso[0]
+                else: #se nao, cria-se
+                    cursor.execute("INSERT INTO Curso (Nome, CodFaculdade) VALUES (%s,%s)", (nome_curso, cod_faculdade))
+                    curso_id = cursor.lastrowid
+                
+                cod_disc = str(disc.get("codigo", ""))[:15]
+                sql_disc= """
+                    INSERT IGNORE INTO Disciplina (DisciplinaID, Nome, Ano, Semestre, ECTS, CursoID)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """
+                values_disc = (
+                    cod_disc,
+                    disc.get("nome", "Desconhecido"),
+                    disc.get("ano"),
+                    disc.get("semestre", 1),
+                    disc.get("ects", 0),
+                    curso_id
+                )
+                cursor.execute(sql_disc, values_disc)
+                if cursor.rowcount > 0:
+                    contador += 1
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            print(f"Sucesso. Inseridas {contador} novas disc para a faculdade {cod_faculdade}.")
+        
+        except json.JSONDecodeError:
+            print("Erro: não temos um json válido.")
+        except mysql.connector.Error as err:
+            print(f"Erro de BD: {err}")
 
 
 if __name__ == "__main__":
     print("Iniciando pesquisa")
     ai = AIHunter()
-    dominio_teste = "vut.cz"
-    print(f"A procurar links para: {dominio_teste}")
+
+    dominio_teste = "unipi.it"
+    cod_faculdade_bd= "I PISA01"
+
     link = ai.search_link(dominio_teste)
+
     if link:
         print(f"link encontrado: {link}")
-        time.sleep(2)
-        print("A extrair texto da página...")
+        time.sleep(1)
         text = ai.read_link(link)
         
-        if text:
-            print("\n--- AMOSTRA DO TEXTO EXTRAÍDO ---")
+        if text and len(text.strip()) > 0:
             result_json = ai.extract_data(text)
             print("🎓 RESULTADO FINAL EXTRAÍDO PELA IA:")
             print(result_json)
