@@ -12,10 +12,14 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     zip \
     unzip \
+    python3 \
+    python3-pip \
     && docker-php-ext-install mysqli \
     && docker-php-ext-enable mysqli
 
 RUN docker-php-ext-install mysqli pdo pdo_mysql && docker-php-ext-enable pdo_mysql
+
+RUN pip3 install --break-system-packages ddgs requests pypdf python-dotenv
 
 # Enable Apache modules (optional, for example mod_rewrite)
 RUN a2enmod rewrite
