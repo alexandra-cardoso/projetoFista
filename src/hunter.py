@@ -21,26 +21,22 @@ class AIHunter:
     def search_link(self, dominio):
         query = f'site:{dominio} ext:pdf "course" "ects" "erasmus" "incoming" -"bilateral" -"agreement"'
         
-        tentativas_maximas = 3
-        for tentativa in range(tentativas_maximas):
+        max_tries = 3
+        for tentativa in range(max_tries):
             try:
                 with DDGS() as ddgs:
                     results = list(ddgs.text(query, max_results=5))
 
                 if results:
-                    palavras_prob = ["palermo", "bilateral", "agreement", "signed", "cz_brno"]
+                    palavras_prob = ["palermo", "bilateral", "agreement", "signed"]
                     for result in results:
                         link = result['href']
                         if ".pdf" in link.lower() and not any(palavra in link.lower() for palavra in palavras_prob):
                             return link
-                    print("⚠️ O robô encontrou PDFs, mas eram acordos bilaterais inválidos.")
                 return None
             except Exception as e:
-                print(f"⚠️ Soluço da DuckDuckGo (Tentativa {tentativa + 1})...")
-                if tentativa < tentativas_maximas - 1:
-                    time.sleep(3)
-                else:
-                    return None
+                print(f"Erro na pesquisa ddg: {e}")
+                return None
         
     def read_link(self, url):
         try:
@@ -88,15 +84,17 @@ class AIHunter:
         """
 
         url_api = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=" + API_KEY
-        dados_post = {"contents": [{"parts": [{"text": prompt}]}]}
+        dados_post = {
+            "contents": [{"parts": [{"text": prompt}]}]
+        }
 
-        tentativas_maximas = 3
-        for tentativa in range(tentativas_maximas):
+        max_tries = 3
+        for tentativa in range(max_tries):
             try: 
                 response = requests.post(url_api, headers={'Content-Type': 'application/json'}, json=dados_post)
                 if response.status_code in [500, 503]:
-                    print(f"⚠️ A Google está sobrecarregada. Tentativa {tentativa + 1} de {tentativas_maximas}...")
-                    if tentativa < tentativas_maximas - 1:
+                    print(f"⚠️ A Google está sobrecarregada. Tentativa {tentativa + 1} de {max_tries}...")
+                    if tentativa < max_tries - 1:
                         time.sleep(5)
                         continue
                     else:
@@ -112,40 +110,42 @@ class AIHunter:
                     return "[]"
             except Exception as e:
                 print(f"⚠️ Erro de rede ao falar com a IA: {e}")
-                if tentativa < tentativas_maximas - 1:
-                    time.sleep(5)
-                else:
-                    return None
+                #if tentativa < max_tries - 1:
+                #    time.sleep(5)
+                #else:
+                return None
         return None
 
 if __name__ == "__main__":
-    print("Iniciando pesquisa")
-    try:
-        ano_escolhido = int(sys.argv[1])
-        sem_escolhido = int(sys.argv[2])
-        curso_escolhido = sys.argv[3]
-    except IndexError:
-        ano_escolhido=1
-        sem_escolhido=1
-        curso_escolhido="Engenharia Informática"
-    
+    print("🚀 Iniciando pesquisa de teste isolada no terminal...")
     ai = AIHunter()
+    
+    # Valores fixos para o teste direto
     dominio_teste = "unipi.it"
+    ano_escolhido = 2
+    semestre_escolhido = 1
+    curso_escolhido = "Engenharia Informática"
 
     link = ai.search_link(dominio_teste)
 
     if link:
-        print(f"link encontrado: {link}")
+        print(f"🔗 Link encontrado: {link}")
         time.sleep(1)
+        
         text = ai.read_link(link)
         
         if text and len(text.strip()) > 0:
-            result_json = ai.extract_data(text, ano_escolhido, sem_escolhido, curso_escolhido)
+            print(f"🧠 A pedir conselhos à IA para {curso_escolhido} ({ano_escolhido}º Ano, {semestre_escolhido}º Semestre)...")
+            
+            # ATENÇÃO: Confirma que a tua função extract_data está a receber estes 3 argumentos (text, ano, semestre, curso)
+            result_json = ai.extract_data(text, ano_escolhido, semestre_escolhido, curso_escolhido)
+            
+            print("\n🎓 SUGESTÕES DO CONSELHEIRO IA:")
             if result_json and result_json != "[]":
                 print(result_json)
             else:
-                print("[]")
+                print("[] (A IA decidiu devolver vazio!)")
         else:
-            print("falha. não consigo extrair o texto")
+            print("❌ Falha: Não foi possível extrair texto do PDF.")
     else:
-        print("falha. o ddg n devolveu nenhum link")
+        print("❌ Falha: O DuckDuckGo não encontrou PDFs válidos.")
