@@ -106,7 +106,53 @@ if(isset($_POST['pesquisa'])) {
                 echo "<h3 style='color: #FFD700; text-align: left; width: 90%; margin: 20px auto 10px auto;'>Outras equivalências para se estiveres a pensar em ir noutra altura...</h3>";
                 desenharTabela($secundarios);
             }
+            //sugestões IA:
+            echo "<hr style='width: 90%; border: 0; border-top: 1px solid rgba(255,255,255,0.2); margin: 30px auto 20px auto;'>";
+            echo "<h3 style='color: #4f9efe; text-align: left; width: 90%; margin: 20px auto 10px auto;'>🧠 Conselheiro IA: Sugestões para o curso de " . htmlspecialchars($curso) . "</h3>";
+            
+            // 1. O Comando Mágico: Força o UTF-8 para aceitar acentos, tem o espaço certo e o 2>&1 no fim!
+            $comando = "PYTHONIOENCODING=utf-8 python3 hunter.py " . escapeshellarg($ano) . " " . escapeshellarg($semestre) . " " . escapeshellarg($curso) . " 2>&1";
+            
+            // 2. Executa e agarra toda a informação
+            exec($comando, $output_array, $codigo_retorno);
+            $result_python = implode("\n", $output_array);
 
+            // 3. A CAIXA PRETA (O Modo Detetive)
+            echo "<div style='background: black; color: lime; padding: 10px; width: 90%; margin: 0 auto; border-radius: 5px; font-family: monospace;'>";
+            echo "<strong>🔍 RAIOS-X DO DOCKER:</strong><br><br>";
+            echo "Comando tentado: " . htmlspecialchars($comando) . "<br>";
+            echo "Código de Erro do Linux: " . $codigo_retorno . "<br>";
+            echo "Mensagem do Python: " . nl2br(htmlspecialchars($result_python)) . "<br>";
+            echo "</div><br>";
+
+            // 4. Transformar em JSON em segurança
+            if (empty($result_python)) {
+                $result_python = "[]";
+            }
+            $sugestoes = json_decode($result_python, true);
+
+            if(is_array($sugestoes) && count($sugestoes) > 0) {
+                echo "<table border='1' style='margin: 0 auto 30px auto; border-collapse: collapse; width: 90%; text-align: left; background-color: rgba(255,255,255,0.1);'>";
+                echo "<tr style='background-color: rgba(79, 158, 254, 0.3); color: white;'>
+                        <th style='padding: 10px;'>Código</th>
+                        <th style='padding: 10px;'>Nome da Cadeira</th>
+                        <th style='padding: 10px;'>ECTS</th>
+                        <th style='padding: 10px;'>Motivo da Sugestão</th>
+                      </tr>";
+                foreach ($sugestoes as $cadeira) {
+                    echo "<tr>";
+                    echo "<td style='padding: 10px;'>" . htmlspecialchars($cadeira['codigo']) . "</td>";
+                    echo "<td style='padding: 10px; font-weight: bold;'>" . htmlspecialchars($cadeira['nome']) . "</td>";
+                    echo "<td style='padding: 10px;'>" . htmlspecialchars($cadeira['ects']) . "</td>";
+                    echo "<td style='padding: 10px; font-style: italic;'>" . htmlspecialchars($cadeira['motivo']) . "</td>";
+                    echo "</tr>";
+                }
+                echo "</table>";
+            } else {
+                echo "<p style='color: #FFD700; width: 90%; margin: 0 auto;'>A IA está a analisar dados ou não encontrou cadeiras ideais. Tenta novamente.</p><br>";
+            }
+
+            
             $pesquisa->fecharBDErasmus();
             ?>
             <br><br>
