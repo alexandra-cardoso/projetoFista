@@ -20,7 +20,6 @@ class AIHunter:
 
     def search_link(self, dominio):
         query = f'site:{dominio} ext:pdf "course" "ects" "erasmus" "incoming" -"bilateral" -"agreement"'
-        
         max_tries = 3
         for tentativa in range(max_tries):
             try:
@@ -28,20 +27,20 @@ class AIHunter:
                     results = list(ddgs.text(query, max_results=5))
 
                 if results:
-                    palavras_prob = ["palermo", "bilateral", "agreement", "signed"]
+                    palavras_prob=["palermo", "bilateral", "agreement", "signed"]
                     for result in results:
-                        link = result['href']
+                        link=result['href']
                         if ".pdf" in link.lower() and not any(palavra in link.lower() for palavra in palavras_prob):
                             return link
                 return None
             except Exception as e:
-                print(f"Erro na pesquisa ddg: {e}")
+                print(f"Erro na pesquisa DuckDuckGo: {e}")
                 return None
         
     def read_link(self, url):
         try:
             response = requests.get(url, headers=self.headers, timeout=20)
-            response.raise_for_status()
+            response.raise_for_status() # vê se deu erro
 
             pdf_file = io.BytesIO(response.content)
             reader = PdfReader(pdf_file)
@@ -53,12 +52,13 @@ class AIHunter:
                     final_text += f"\n--- PÁGINA {i+1} ---\n" + page_text
             
             return final_text[:20000]
+            
         except Exception as e:
             print(f"Erro ao tentar ler o PDF: {e}")
             return None
         
-    def extract_data(self, initial_text, ano_aluno, semestre_aluno, curso_aluno):
-        print("🧠 A enviar texto para a Inteligência Artificial...")
+    def extract_data(self, initial_text, ano_aluno, sem_aluno, curso_aluno):
+        #print("A enviar texto para Gemini")
         prompt = f"""
         Tu és um conselheiro académico especialista em mobilidade Erasmus.
         O aluno que te pede ajuda quer fazer Erasmus no {ano_aluno}º ano, {sem_aluno}º semestre.
@@ -92,60 +92,60 @@ class AIHunter:
         for tentativa in range(max_tries):
             try: 
                 response = requests.post(url_api, headers={'Content-Type': 'application/json'}, json=dados_post)
+                
                 if response.status_code in [500, 503]:
-                    print(f"⚠️ A Google está sobrecarregada. Tentativa {tentativa + 1} de {max_tries}...")
                     if tentativa < max_tries - 1:
                         time.sleep(5)
                         continue
                     else:
                         return None
+                          
                 elif response.status_code != 200:
-                    print(f"\n🚨 O GOOGLE REJEITOU O PEDIDO (Erro {response.status_code})")
+                    #print(f"\n🚨 O GOOGLE REJEITOU O PEDIDO (Erro {response.status_code})")
+                    #print(response.text)
                     return None
                 
-                dados = response.json()
+                dados=response.json()
+
                 if 'candidates' in dados and len(dados['candidates']) > 0:
                     return dados['candidates'][0]['content']['parts'][0]['text']
                 else:
                     return "[]"
             except Exception as e:
-                print(f"⚠️ Erro de rede ao falar com a IA: {e}")
-                #if tentativa < max_tries - 1:
-                #    time.sleep(5)
-                #else:
+                #print(f"Erro ao falar com a IA: {e}")
                 return None
         return None
 
+
 if __name__ == "__main__":
-    print("🚀 Iniciando pesquisa de teste isolada no terminal...")
-    ai = AIHunter()
+    import sys
+
+    try:
+        ano_escolhido = int(sys.argv[1])
+        semestre_escolhido = int(sys.argv[2])
+        curso_escolhido = sys.argv[3]
+    except IndexError:
+        ano_escolhido = 1
+        semestre_escolhido = 1
+        curso_escolhido = ""
+    print("Iniciando pesquisa")
     
-    # Valores fixos para o teste direto
+    ai = AIHunter()
     dominio_teste = "unipi.it"
-    ano_escolhido = 2
-    semestre_escolhido = 1
-    curso_escolhido = "Engenharia Informática"
 
     link = ai.search_link(dominio_teste)
 
     if link:
-        print(f"🔗 Link encontrado: {link}")
-        time.sleep(1)
-        
+        print(f"link encontrado: {link}")
         text = ai.read_link(link)
         
         if text and len(text.strip()) > 0:
-            print(f"🧠 A pedir conselhos à IA para {curso_escolhido} ({ano_escolhido}º Ano, {semestre_escolhido}º Semestre)...")
-            
-            # ATENÇÃO: Confirma que a tua função extract_data está a receber estes 3 argumentos (text, ano, semestre, curso)
-            result_json = ai.extract_data(text, ano_escolhido, semestre_escolhido, curso_escolhido)
-            
-            print("\n🎓 SUGESTÕES DO CONSELHEIRO IA:")
-            if result_json and result_json != "[]":
-                print(result_json)
-            else:
-                print("[] (A IA decidiu devolver vazio!)")
+            ano_escolhido = 2
+            semestre_escolhido = 1
+            result_json = ai.extract_data(text, ano_escolhido, semestre_escolhido, "Engenharia Informática")
+            print("\n SUGESTÕES DO CONSELHEIRO IA:")
+            print(result_json)
         else:
-            print("❌ Falha: Não foi possível extrair texto do PDF.")
+            print("falha. não consigo extrair o texto")
     else:
-        print("❌ Falha: O DuckDuckGo não encontrou PDFs válidos.")
+        print("falha. o ddg n devolveu nenhum link")
