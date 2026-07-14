@@ -108,7 +108,8 @@ class AIHunter:
                 dados=response.json()
 
                 if 'candidates' in dados and len(dados['candidates']) > 0:
-                    return dados['candidates'][0]['content']['parts'][0]['text']
+                    text_response = dados['candidates'][0]['content']['parts'][0]['text']
+                    return text_response.replace("```json", "").replace("```", "").strip()
                 else:
                     return "[]"
             except Exception as e:
@@ -118,32 +119,30 @@ class AIHunter:
 
 
 if __name__ == "__main__":
-    #try:
-    #    ano_escolhido = int(sys.argv[1])
-    #    semestre_escolhido = int(sys.argv[2])
-    #    curso_escolhido = sys.argv[3]
-    #except IndexError:
-    #    ano_escolhido = 1
-    #    semestre_escolhido = 1
-    #    curso_escolhido = ""
-    print("Iniciando pesquisa")
+    try:
+        dominio_teste = sys.argv[1]
+        ano_escolhido = int(sys.argv[2])
+        semestre_escolhido = int(sys.argv[3])
+        curso_escolhido = sys.argv[4]
+    except IndexError:
+        dominio_teste = ""
+        ano_escolhido = 1
+        semestre_escolhido = 1
+        curso_escolhido = ""
     
     ai = AIHunter()
-    dominio_teste = "unipi.it"
-
     link = ai.search_link(dominio_teste)
 
     if link:
-        print(f"link encontrado: {link}")
         text = ai.read_link(link)
         
         if text and len(text.strip()) > 0:
-            ano_escolhido = 2
-            semestre_escolhido = 1
-            result_json = ai.extract_data(text, ano_escolhido, semestre_escolhido, "Engenharia Informática")
-            print("\n SUGESTÕES DO CONSELHEIRO IA:")
-            print(result_json)
+            result_json = ai.extract_data(text, ano_escolhido, semestre_escolhido, curso_escolhido)
+            if result_json and result_json != "[]":
+                print(result_json)
+            else:
+                print("[]")
         else:
-            print("falha. não consigo extrair o texto")
+            print("[]")
     else:
-        print("falha. o ddg n devolveu nenhum link")
+        print("[]")
