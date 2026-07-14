@@ -118,16 +118,14 @@ class AIHunter:
 
 
 if __name__ == "__main__":
-    import sys
-
-    try:
-        ano_escolhido = int(sys.argv[1])
-        semestre_escolhido = int(sys.argv[2])
-        curso_escolhido = sys.argv[3]
-    except IndexError:
-        ano_escolhido = 1
-        semestre_escolhido = 1
-        curso_escolhido = ""
+    #try:
+    #    ano_escolhido = int(sys.argv[1])
+    #    semestre_escolhido = int(sys.argv[2])
+    #    curso_escolhido = sys.argv[3]
+    #except IndexError:
+    #    ano_escolhido = 1
+    #    semestre_escolhido = 1
+    #    curso_escolhido = ""
     print("Iniciando pesquisa")
     
     ai = AIHunter()
